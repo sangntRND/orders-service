@@ -2,51 +2,48 @@ import sys
 import os
 import pytest
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from app import app
+import json
+from app import app, orders
 
-class OrdersTestCase(unittest.TestCase):
-    def setUp(self):
-        self.app = app.test_client()
-        self.app.testing = True
-        global orders
-        orders = []
+@pytest.fixture
+def client():
+    app.testing = True
+    with app.test_client() as client:
+        yield client
 
-    def test_get_orders(self):
-        response = self.app.get('/api/orders/')
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json, [])
+def test_get_orders(client):
+    response = client.get('/api/orders/')
+    assert response.status_code == 200
+    assert response.json == []
 
-    def test_create_order(self):
-        new_order = {"item": "Laptop", "quantity": 1}
-        response = self.app.post('/api/orders/', data=json.dumps(new_order), content_type='application/json')
-        self.assertEqual(response.status_code, 201)
-        self.assertEqual(response.json['item'], "Laptop")
-        self.assertEqual(response.json['quantity'], 1)
+def test_create_order(client):
+    new_order = {"item": "Laptop", "quantity": 1}
+    response = client.post('/api/orders/', data=json.dumps(new_order), content_type='application/json')
+    assert response.status_code == 201
+    assert response.json['item'] == "Laptop"
+    assert response.json['quantity'] == 1
 
-    def test_get_order(self):
-        new_order = {"item": "Laptop", "quantity": 1}
-        self.app.post('/api/orders/', data=json.dumps(new_order), content_type='application/json')
-        response = self.app.get('/api/orders/1')
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json['item'], "Laptop")
-        self.assertEqual(response.json['quantity'], 1)
+def test_get_order(client):
+    new_order = {"item": "Laptop", "quantity": 1}
+    client.post('/api/orders/', data=json.dumps(new_order), content_type='application/json')
+    response = client.get('/api/orders/1')
+    assert response.status_code == 200
+    assert response.json['item'] == "Laptop"
+    assert response.json['quantity'] == 1
 
-    def test_update_order(self):
-        new_order = {"item": "Laptop", "quantity": 1}
-        self.app.post('/api/orders/', data=json.dumps(new_order), content_type='application/json')
-        updated_order = {"item": "Laptop", "quantity": 2}
-        response = self.app.put('/api/orders/1', data=json.dumps(updated_order), content_type='application/json')
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json['quantity'], 2)
+def test_update_order(client):
+    new_order = {"item": "Laptop", "quantity": 1}
+    client.post('/api/orders/', data=json.dumps(new_order), content_type='application/json')
+    updated_order = {"item": "Laptop", "quantity": 2}
+    response = client.put('/api/orders/1', data=json.dumps(updated_order), content_type='application/json')
+    assert response.status_code == 200
+    assert response.json['quantity'] == 2
 
-    def test_delete_order(self):
-        new_order = {"item": "Laptop", "quantity": 1}
-        self.app.post('/api/orders/', data=json.dumps(new_order), content_type='application/json')
-        response = self.app.delete('/api/orders/1')
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json['message'], "Order deleted")
-        response = self.app.get('/api/orders/1')
-        self.assertEqual(response.status_code, 404)
-
-if __name__ == "__main__":
-    unittest.main()
+def test_delete_order(client):
+    new_order = {"item": "Laptop", "quantity": 1}
+    client.post('/api/orders/', data=json.dumps(new_order), content_type='application/json')
+    response = client.delete('/api/orders/1')
+    assert response.status_code == 200
+    assert response.json['message'] == "Order deleted"
+    response = client.get('/api/orders/1')
+    assert response.status_code == 404
