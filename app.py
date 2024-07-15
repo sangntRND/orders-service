@@ -47,8 +47,7 @@ def update_order(order_id):
 def delete_order(order_id):
     global orders
     orders = [order for order in orders if order['id'] != order_id]
-    # Forgot to return a response
-    # return jsonify({"message": "Order deleted"}), 200
+    return jsonify({"message": "Order deleted"}), 200
 
 if __name__ == '__main__':
     app.run(debug=True)
