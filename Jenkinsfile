@@ -4,7 +4,7 @@
 // Version: v1.x
 //========================================================================
 @Library('jenkins-devops-ci@main') _
-projecttemplatePython2Api script: this
+ordersService script: this
 //========================================================================
 // DO NOT MODIFY AFTER THESE LINES.
 //=========================================================================
